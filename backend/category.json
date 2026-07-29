@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Men",
+    "subcategory": ["Shirts", "T-Shirts", "Jeans", "Jackets", "Ethnic Wear"],
+    "image": "https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600&q=80"
+  },
+  {
+    "name": "Women",
+    "subcategory": ["Dresses", "Kurtas", "Tops", "Jeans", "Ethnic Wear"],
+    "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80"
+  },
+  {
+    "name": "Kids",
+    "subcategory": ["T-Shirts", "Dresses", "Dungarees", "Shorts"],
+    "image": "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=600&q=80"
+  },
+  {
+    "name": "Footwear",
+    "subcategory": ["Sneakers", "Sandals", "Formal Shoes", "Sports Shoes"],
+    "image": "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&q=80"
+  },
+  {
+    "name": "Accessories",
+    "subcategory": ["Watches", "Bags", "Sunglasses", "Backpacks"],
+    "image": "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=600&q=80"
+  }
+]
