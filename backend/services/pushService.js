@@ -18,46 +18,45 @@ if (configured) {
 }
 
 async function sendPushToUser(userId, payload) {
-  const title = payload.title;
-  const message = payload.message;
-  const data = payload.data || {};
+  if (!configured) {
+    console.log(`[push] skipped for user ${userId}: VAPID not configured`);
+    return { sent: 0, removed: 0 };
+  }
 
-  if (!configured) return { sent: 0, removed: 0 };
-
-  const tokens = await DeviceToken.find({ userId: userId });
-  if (tokens.length === 0) return { sent: 0, removed: 0 };
-
-  const body = JSON.stringify({ title: title, body: message, data: data });
+  const tokens = await DeviceToken.find({ userId });
+  if (tokens.length === 0) {
+    console.log(`[push] no device tokens registered for user ${userId} - nothing to send`);
+    return { sent: 0, removed: 0 };
+  }
 
   let sent = 0;
   let removed = 0;
 
   await Promise.all(
-    tokens.map(async function (token) {
+    tokens.map(async (token) => {
       try {
         await webpush.sendNotification(
           {
             endpoint: token.endpoint,
             keys: { p256dh: token.keys.p256dh, auth: token.keys.auth },
           },
-          body
+          JSON.stringify(payload)
         );
         sent += 1;
       } catch (err) {
-        const deadCodes = [404, 410, 401, 403];
-        if (deadCodes.indexOf(err.statusCode) !== -1) {
+        if ([404, 410, 401, 403].includes(err.statusCode)) {
           await DeviceToken.deleteOne({ _id: token._id });
           removed += 1;
+          console.warn(`[push] removed dead token ${token._id} for user ${userId}: status=${err.statusCode}`);
         } else {
-          console.error(
-            "[push] send failed for token " + token._id + ": status=" + err.statusCode + " body=" + err.body
-          );
+          console.error(`[push] send failed for token ${token._id} (user ${userId}): status=${err.statusCode} body=${err.body}`);
         }
       }
     })
   );
 
-  return { sent: sent, removed: removed };
+  console.log(`[push] user ${userId}: ${tokens.length} token(s), sent=${sent}, removed=${removed}`);
+  return { sent, removed };
 }
 
-module.exports = { sendPushToUser: sendPushToUser, isPushConfigured: function () { return configured; } };
+module.exports = { sendPushToUser, isPushConfigured: () => configured };
