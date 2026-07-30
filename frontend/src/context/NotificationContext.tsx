@@ -23,12 +23,21 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-async function subscribeToPush() {
+// force=true unsubscribes any existing browser-level subscription first —
+// repeated testing/permission resets can leave a stale subscription object
+// cached locally that the push service (FCM) has already invalidated.
+async function subscribeToPush(force = false) {
   const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
   if (!vapidKey) return;
 
   const registration = await navigator.serviceWorker.register("/sw.js");
   let subscription = await registration.pushManager.getSubscription();
+
+  if (subscription && force) {
+    await subscription.unsubscribe();
+    subscription = null;
+  }
+
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
@@ -78,7 +87,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         );
         return;
       }
-      await subscribeToPush();
+      await subscribeToPush(true);
       alert("Push notifications enabled.");
     } catch (err) {
       alert("Could not enable push notifications: " + (err instanceof Error ? err.message : String(err)));
