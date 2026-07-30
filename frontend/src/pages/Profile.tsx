@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useNotifications } from "../context/NotificationContext";
 import type { NotificationPreferences, Product } from "../types";
 
 const PREF_LABELS: Record<keyof NotificationPreferences, string> = {
@@ -19,6 +20,7 @@ const PREF_LABELS: Record<keyof NotificationPreferences, string> = {
 export function Profile() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { pushPermission, requestPushPermission } = useNotifications();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [history, setHistory] = useState<{ productId: Product }[]>([]);
 
@@ -60,6 +62,27 @@ export function Profile() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Push notifications</h2>
+        {pushPermission === "unsupported" && (
+          <p className="text-sm text-(--color-muted)">Not supported on this browser.</p>
+        )}
+        {pushPermission === "granted" && <p className="text-sm text-(--color-muted)">Enabled on this device.</p>}
+        {pushPermission === "denied" && (
+          <p className="text-sm text-(--color-muted)">
+            Blocked — enable notifications for this site in your browser settings, then reload.
+          </p>
+        )}
+        {pushPermission === "default" && (
+          <button
+            onClick={requestPushPermission}
+            className="rounded-full bg-(--color-berry) px-4 py-2 text-sm text-white"
+          >
+            Enable push notifications
+          </button>
+        )}
       </section>
 
       {prefs && (
