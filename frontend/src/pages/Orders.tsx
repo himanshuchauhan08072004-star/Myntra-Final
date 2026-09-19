@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import type { Order } from "../types";
@@ -67,14 +68,14 @@ export function Orders() {
     };
   }
 
-  const selectClass =
-    "rounded-md border border-(--color-line) bg-(--color-paper) px-3 py-1.5 text-sm dark:border-(--color-line)";
+  const selectClass = "rounded-md border border-(--color-line) bg-(--color-paper) px-3 py-1.5 text-sm";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl italic">Your orders</h1>
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <span className="eyebrow">Account</span>
+      <h1 className="mt-2 font-display text-3xl italic sm:text-4xl">Your orders</h1>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3 border-b border-(--color-line) pb-6">
         <select className={selectClass} value={status} onChange={(e) => updateFilter(setStatus)(e.target.value)}>
           <option value="">All statuses</option>
           {Object.entries(STATUS_LABEL).map(([value, label]) => (
@@ -127,22 +128,23 @@ export function Orders() {
         <p className="mt-8 text-(--color-muted)">No orders match these filters.</p>
       ) : (
         <>
-          <div className="mt-8 space-y-4">
+          <div className="mt-2 divide-y divide-(--color-line)">
             {orders.map((o) => (
               <Link
                 key={o._id}
                 to={`/orders/${o._id}`}
-                className="flex items-center justify-between rounded-md border border-(--color-line) p-4 hover:border-(--color-berry) dark:border-(--color-line)"
+                className="group flex items-center justify-between py-5 transition-colors hover:bg-(--color-paper-sunken)/40"
               >
                 <div>
                   <p className="font-medium">{o.invoiceNumber}</p>
                   <p className="text-sm text-(--color-muted)">{new Date(o.placedAt).toLocaleDateString()}</p>
                 </div>
-                <div className="text-right">
-                  <p className="stamp text-xs">{STATUS_LABEL[o.status]}</p>
-                  <p className="mt-1 font-[family-name:var(--font-mono)] text-sm">
-                    ₹{(o.totalCents / 100).toFixed(2)}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="stamp text-xs">{STATUS_LABEL[o.status]}</p>
+                    <p className="mt-1 font-mono text-sm">₹{(o.totalCents / 100).toFixed(2)}</p>
+                  </div>
+                  <ArrowRight size={16} className="text-(--color-muted) transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>
             ))}

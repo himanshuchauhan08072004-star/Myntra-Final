@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { Navbar } from "./components/Navbar";
+import { Footer } from "./components/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
@@ -18,6 +19,19 @@ import { OrderDetail } from "./pages/OrderDetail";
 import { Wishlist } from "./pages/Wishlist";
 import { Profile } from "./pages/Profile";
 
+// The nav is a floating fixed element now, so every page needs top spacing
+// to clear it — except the homepage, whose hero deliberately bleeds full
+// height behind the transparent nav.
+function PageBody({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
+  return (
+    <main className={`min-h-screen ${isHome ? "" : "pt-[var(--nav-h)]"}`}>
+      {children}
+    </main>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -27,7 +41,7 @@ export default function App() {
             <WishlistProvider>
             <NotificationProvider>
               <Navbar />
-              <main className="min-h-screen">
+              <PageBody>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
@@ -41,7 +55,8 @@ export default function App() {
                   <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 </Routes>
-              </main>
+              </PageBody>
+              <Footer />
             </NotificationProvider>
             </WishlistProvider>
           </CartProvider>

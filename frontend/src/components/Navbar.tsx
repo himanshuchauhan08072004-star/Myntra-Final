@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, Heart, Bell, Sun, Moon, Monitor, User as UserIcon } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Search, ShoppingBag, Heart, Bell, Sun, Moon, User as UserIcon, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -11,18 +11,32 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const { items: wishlistItems } = useWishlist();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { unreadCount } = useNotifications();
+  const location = useLocation();
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Click-outside closes whichever dropdown is open — avoids the classic
-  // hover-gap bug where moving the cursor from trigger to menu crosses a
-  // dead zone and the menu disappears before you can click anything in it.
+  const isHome = location.pathname === "/";
+  const transparent = isHome && !scrolled;
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 56);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Click-outside closes whichever dropdown is open.
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifs(false);
@@ -32,53 +46,57 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (query.trim()) navigate(`/products?q=${encodeURIComponent(query)}`);
+    if (query.trim()) {
+      navigate(`/products?q=${encodeURIComponent(query)}`);
+      setMobileOpen(false);
+      setSearchOpen(false);
+    }
   }
 
-  const ThemeIcon = { light: Sun, dark: Moon, system: Monitor }[theme];
+  const textColor = transparent ? "#fdfaf3" : "var(--color-ink)";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-(--color-line) bg-(--color-paper)/95 backdrop-blur dark:bg-(--color-paper)/95 dark:border-(--color-line)">
-      <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3 sm:px-6">
-        <Link to="/" className="shrink-0 font-[family-name:var(--font-display)] text-2xl font-semibold italic tracking-tight">
-          Myntra<span className="text-(--color-berry)">.</span>
+    <header className={`fashion-nav ${!transparent ? "fashion-nav--solid" : ""}`}>
+      <div className="fashion-nav-inner" data-solid={!transparent || undefined} style={{ color: textColor }}>
+        <Link to="/" className="shrink-0 font-display text-xl font-medium italic tracking-tight" style={{ color: textColor }}>
+          Myntra<span style={{ color: "var(--color-berry)" }}>.</span>
         </Link>
 
-        <form onSubmit={handleSearch} className="hidden flex-1 items-center gap-2 rounded-full border border-(--color-line) bg-(--color-paper-raised) px-4 py-2 sm:flex dark:bg-(--color-paper-raised) dark:border-(--color-line)">
-          <Search size={16} className="text-(--color-muted)" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search for products, brands..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-(--color-muted)"
-          />
-        </form>
-
-        <nav className="ml-auto flex items-center gap-4 text-sm">
-          <Link to="/products" className="hidden sm:inline hover:text-(--color-berry)">
+        <nav className="ml-2 hidden items-center gap-1 sm:flex">
+          <Link to="/products" className="px-3 py-2 text-sm transition-opacity hover:opacity-60">
             Shop
           </Link>
+        </nav>
 
+        <div className="ml-auto flex items-center gap-0.5">
           <button
-            onClick={() => setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light")}
-            aria-label="Toggle theme"
-            className="rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"
+            onClick={() => setSearchOpen((s) => !s)}
+            aria-label="Search"
+            className="icon-btn hidden sm:inline-flex"
+            style={{ color: textColor }}
           >
-            <ThemeIcon size={18} />
+            <Search size={17} />
+          </button>
+
+          <button onClick={toggleTheme} aria-label="Toggle theme" className="theme-portal-btn mx-1">
+            {theme === "dark" ? <Moon size={15} /> : <Sun size={15} />}
           </button>
 
           {user && (
-            <div className="relative" ref={notifRef}>
-              <button
-                onClick={() => setShowNotifs((s) => !s)}
-                aria-label="Notifications"
-                className="relative rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                <Bell size={18} />
+            <div className="relative hidden sm:block" ref={notifRef}>
+              <button onClick={() => setShowNotifs((s) => !s)} aria-label="Notifications" className="icon-btn relative" style={{ color: textColor }}>
+                <Bell size={17} />
                 {unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -87,48 +105,35 @@ export function Navbar() {
             </div>
           )}
 
-          <Link to="/wishlist" aria-label="Wishlist" className="relative rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10">
-            <Heart size={18} />
+          <Link to="/wishlist" aria-label="Wishlist" className="icon-btn relative hidden sm:inline-flex" style={{ color: textColor }}>
+            <Heart size={17} />
             {wishlistItems.length > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
                 {wishlistItems.length > 9 ? "9+" : wishlistItems.length}
               </span>
             )}
           </Link>
 
-          <Link to="/cart" aria-label="Cart" className="relative rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10">
-            <ShoppingBag size={18} />
+          <Link to="/cart" aria-label="Cart" className="icon-btn relative" style={{ color: textColor }}>
+            <ShoppingBag size={17} />
             {itemCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-berry) text-[10px] text-white">
                 {itemCount > 9 ? "9+" : itemCount}
               </span>
             )}
           </Link>
 
           {user ? (
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setShowProfileMenu((s) => !s)}
-                aria-label="Profile"
-                aria-expanded={showProfileMenu}
-                className="rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                <UserIcon size={18} />
+            <div className="relative hidden sm:block" ref={profileRef}>
+              <button onClick={() => setShowProfileMenu((s) => !s)} aria-label="Profile" aria-expanded={showProfileMenu} className="icon-btn" style={{ color: textColor }}>
+                <UserIcon size={17} />
               </button>
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-44 rounded-lg border border-(--color-line) bg-(--color-paper-raised) py-1 shadow-lg dark:bg-(--color-paper-raised) dark:border-(--color-line)">
-                  <Link
-                    to="/profile"
-                    onClick={() => setShowProfileMenu(false)}
-                    className="block px-4 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10"
-                  >
+                <div className="surface absolute right-0 mt-2 w-48 rounded-md py-1 shadow-xl" style={{ color: "var(--color-ink)" }}>
+                  <Link to="/profile" onClick={() => setShowProfileMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-(--color-paper-sunken)">
                     Profile
                   </Link>
-                  <Link
-                    to="/orders"
-                    onClick={() => setShowProfileMenu(false)}
-                    className="block px-4 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10"
-                  >
+                  <Link to="/orders" onClick={() => setShowProfileMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-(--color-paper-sunken)">
                     Orders
                   </Link>
                   <button
@@ -136,7 +141,7 @@ export function Navbar() {
                       setShowProfileMenu(false);
                       logout();
                     }}
-                    className="block w-full px-4 py-2 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
+                    className="block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-(--color-paper-sunken)"
                   >
                     Log out
                   </button>
@@ -144,12 +149,83 @@ export function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className="rounded-full bg-(--color-ink) px-4 py-2 text-sm text-white dark:bg-white dark:text-black">
+            <Link to="/login" className="btn btn-primary ml-2 hidden sm:inline-flex">
               Log in
             </Link>
           )}
-        </nav>
+
+          <button onClick={() => setMobileOpen(true)} aria-label="Open menu" className="icon-btn sm:hidden" style={{ color: textColor }}>
+            <Menu size={19} />
+          </button>
+        </div>
       </div>
+
+      {searchOpen && (
+        <div className="mx-auto mt-2 hidden max-w-2xl px-4 sm:block">
+          <form onSubmit={handleSearch} className="surface flex items-center gap-3 rounded-full px-5 py-3 shadow-xl">
+            <Search size={16} className="text-(--color-muted)" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search for products, brands, styles..."
+              className="w-full bg-transparent text-sm outline-none placeholder:text-(--color-muted)"
+              style={{ color: "var(--color-ink)" }}
+            />
+          </form>
+        </div>
+      )}
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 bg-(--color-paper) sm:hidden" style={{ color: "var(--color-ink)" }}>
+          <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-4">
+            <span className="font-display text-xl italic">Menu</span>
+            <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="icon-btn">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-1 p-4">
+            <form onSubmit={handleSearch} className="mb-4 flex items-center gap-3 border-b border-(--color-line) py-2">
+              <Search size={16} className="text-(--color-muted)" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full bg-transparent text-sm outline-none placeholder:text-(--color-muted)"
+              />
+            </form>
+            <Link to="/products" onClick={() => setMobileOpen(false)} className="py-3 text-lg font-display italic">
+              Shop
+            </Link>
+            <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="py-3 text-lg font-display italic">
+              Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}
+            </Link>
+            {user ? (
+              <>
+                <Link to="/orders" onClick={() => setMobileOpen(false)} className="py-3 text-lg font-display italic">
+                  Orders
+                </Link>
+                <Link to="/profile" onClick={() => setMobileOpen(false)} className="py-3 text-lg font-display italic">
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                  }}
+                  className="py-3 text-left text-lg font-display italic text-(--color-berry)"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)} className="py-3 text-lg font-display italic">
+                Log in
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -157,8 +233,8 @@ export function Navbar() {
 function NotificationDropdown({ onClose }: { onClose: () => void }) {
   const { notifications, markRead, markAllRead } = useNotifications();
   return (
-    <div className="fixed inset-x-4 top-16 z-50 rounded-lg border border-(--color-line) bg-(--color-paper-raised) shadow-lg sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:z-auto sm:mt-2 sm:w-80 dark:bg-(--color-paper-raised) dark:border-(--color-line)">
-      <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-2 dark:border-(--color-line)">
+    <div className="surface absolute right-0 z-50 mt-2 w-80 rounded-md shadow-xl" style={{ color: "var(--color-ink)" }}>
+      <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-3">
         <span className="text-sm font-medium">Notifications</span>
         <button onClick={markAllRead} className="text-xs text-(--color-berry)">Mark all read</button>
       </div>
@@ -173,7 +249,7 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
               markRead(n._id);
               onClose();
             }}
-            className={`block w-full border-b border-(--color-line) px-4 py-3 text-left text-sm last:border-0 hover:bg-black/5 dark:border-(--color-line) dark:hover:bg-white/10 ${!n.isRead ? "bg-(--color-berry)/5" : ""}`}
+            className={`block w-full border-b border-(--color-line) px-4 py-3 text-left text-sm last:border-0 transition-colors hover:bg-(--color-paper-sunken) ${!n.isRead ? "bg-(--color-berry)/5" : ""}`}
           >
             <p className="font-medium">{n.title}</p>
             <p className="text-(--color-muted)">{n.message}</p>

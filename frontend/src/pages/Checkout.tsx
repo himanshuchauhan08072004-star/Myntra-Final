@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Check } from "lucide-react";
 import { api } from "../lib/api";
 import { useCart } from "../context/CartContext";
 
@@ -37,15 +38,23 @@ export function Checkout() {
   }
 
   if (bag.length === 0 && !orderId) {
-    return <div className="mx-auto max-w-md px-4 py-16 text-(--color-muted)">Your bag is empty.</div>;
+    return <div className="mx-auto max-w-md px-4 py-24 text-(--color-muted)">Your bag is empty.</div>;
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8 sm:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl italic">Checkout</h1>
-      <p className="mt-2 text-sm text-(--color-muted)">Subtotal: ₹{subtotal}</p>
+    <div className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-12">
+      <span className="eyebrow">Checkout</span>
+      <h1 className="mt-2 font-display text-3xl italic sm:text-4xl">Complete your order</h1>
+
+      <div className="mt-6 flex items-center gap-2 text-xs uppercase tracking-wide">
+        <StepDot done={true} label="Address" />
+        <div className="h-px w-8 bg-(--color-line)" />
+        <StepDot done={!!clientSecret} active={!clientSecret} label="Payment" />
+      </div>
+
+      <p className="mt-6 text-sm text-(--color-muted)">Subtotal: <span className="font-mono">₹{subtotal}</span></p>
       {changedItems.length > 0 && (
-        <p className="mt-2 rounded-md bg-(--color-berry)/10 px-3 py-2 text-xs text-(--color-berry)">
+        <p className="mt-2 rounded-sm bg-(--color-berry)/10 px-3 py-2 text-xs text-(--color-berry)">
           {changedItems.length === 1 ? "1 item's" : `${changedItems.length} items'`} price changed since you
           added it to your bag — the total above already reflects the current price.
         </p>
@@ -54,20 +63,17 @@ export function Checkout() {
       {!clientSecret ? (
         <form onSubmit={startCheckout} className="mt-8 space-y-4">
           <label className="block text-sm">
-            <span className="mb-1 block text-(--color-muted)">Shipping address</span>
+            <span className="mb-1.5 block text-xs uppercase tracking-wide text-(--color-muted)">Shipping address</span>
             <textarea
               required
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
               rows={3}
-              className="w-full rounded-md border border-(--color-line) bg-(--color-paper-raised) px-3 py-2 outline-none focus:border-(--color-berry) dark:bg-(--color-paper-raised) dark:border-(--color-line)"
+              className="input-field"
             />
           </label>
           {error && <p className="text-sm text-(--color-berry)">{error}</p>}
-          <button
-            disabled={loading}
-            className="w-full rounded-full bg-(--color-berry) py-3 text-sm text-white disabled:opacity-50"
-          >
+          <button disabled={loading} className="btn btn-accent w-full">
             {loading ? "Preparing payment..." : "Continue to payment"}
           </button>
         </form>
@@ -76,6 +82,25 @@ export function Checkout() {
           <PaymentForm orderId={orderId!} onSuccess={refresh} />
         </Elements>
       )}
+    </div>
+  );
+}
+
+function StepDot({ done, active, label }: { done?: boolean; active?: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] ${
+          done
+            ? "border-(--color-ink) bg-(--color-ink) text-(--color-paper)"
+            : active
+            ? "border-(--color-berry) text-(--color-berry)"
+            : "border-(--color-line) text-(--color-muted)"
+        }`}
+      >
+        {done ? <Check size={11} /> : ""}
+      </span>
+      <span className={active || done ? "text-(--color-ink)" : "text-(--color-muted)"}>{label}</span>
     </div>
   );
 }
@@ -118,10 +143,7 @@ function PaymentForm({ orderId, onSuccess }: { orderId: string; onSuccess: () =>
       <PaymentElement />
       {!stripe && <p className="text-sm text-(--color-muted)">Loading payment form…</p>}
       {error && <p className="text-sm text-(--color-berry)">{error}</p>}
-      <button
-        disabled={!stripe || processing}
-        className="w-full rounded-full bg-(--color-berry) py-3 text-sm text-white disabled:opacity-50"
-      >
+      <button disabled={!stripe || processing} className="btn btn-accent w-full">
         {processing ? "Processing..." : "Pay now"}
       </button>
     </form>

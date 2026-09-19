@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Sun, Moon } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -19,7 +20,7 @@ const PREF_LABELS: Record<keyof NotificationPreferences, string> = {
 
 export function Profile() {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, setThemeExplicit } = useTheme();
   const { pushPermission, requestPushPermission } = useNotifications();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [history, setHistory] = useState<{ productId: Product }[]>([]);
@@ -37,35 +38,37 @@ export function Profile() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl italic">Profile</h1>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+      <span className="eyebrow">Account</span>
+      <h1 className="mt-2 font-display text-3xl italic sm:text-4xl">Profile</h1>
 
-      <section className="mt-8">
-        <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Account</h2>
-        <p>{user?.fullName}</p>
+      <section className="mt-10 border-b border-(--color-line) pb-8">
+        <h2 className="mb-3 text-xs uppercase tracking-wide text-(--color-muted)">Account</h2>
+        <p className="font-medium">{user?.fullName}</p>
         <p className="text-sm text-(--color-muted)">{user?.email}</p>
         <button onClick={logout} className="mt-3 text-sm text-(--color-berry)">Log out</button>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Appearance</h2>
+      <section className="mt-8 border-b border-(--color-line) pb-8">
+        <h2 className="mb-3 text-xs uppercase tracking-wide text-(--color-muted)">Appearance</h2>
         <div className="flex gap-2">
-          {(["light", "dark", "system"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTheme(t)}
-              className={`rounded-full border px-4 py-2 text-sm capitalize ${
-                theme === t ? "border-(--color-ink) bg-(--color-ink) text-white dark:border-white dark:bg-white dark:text-black" : "border-(--color-line) dark:border-(--color-line)"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+          <button
+            onClick={() => setThemeExplicit("light")}
+            className={`btn ${theme === "light" ? "btn-primary" : "btn-outline"}`}
+          >
+            <Sun size={15} /> Day
+          </button>
+          <button
+            onClick={() => setThemeExplicit("dark")}
+            className={`btn ${theme === "dark" ? "btn-primary" : "btn-outline"}`}
+          >
+            <Moon size={15} /> Night
+          </button>
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Push notifications</h2>
+      <section className="mt-8 border-b border-(--color-line) pb-8">
+        <h2 className="mb-3 text-xs uppercase tracking-wide text-(--color-muted)">Push notifications</h2>
         {pushPermission === "unsupported" && (
           <p className="text-sm text-(--color-muted)">Not supported on this browser.</p>
         )}
@@ -76,19 +79,16 @@ export function Profile() {
           </p>
         )}
         {pushPermission === "default" && (
-          <button
-            onClick={requestPushPermission}
-            className="rounded-full bg-(--color-berry) px-4 py-2 text-sm text-white"
-          >
+          <button onClick={requestPushPermission} className="btn btn-accent">
             Enable push notifications
           </button>
         )}
       </section>
 
       {prefs && (
-        <section className="mt-8">
-          <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Notification preferences</h2>
-          <div className="space-y-2">
+        <section className="mt-8 border-b border-(--color-line) pb-8">
+          <h2 className="mb-3 text-xs uppercase tracking-wide text-(--color-muted)">Notification preferences</h2>
+          <div className="space-y-2.5">
             {(Object.keys(PREF_LABELS) as (keyof NotificationPreferences)[]).map((key) => (
               <label key={key} className="flex items-center justify-between text-sm">
                 <span>{PREF_LABELS[key]}</span>
@@ -101,12 +101,12 @@ export function Profile() {
 
       {history.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-2 text-sm font-medium text-(--color-muted)">Recently viewed</h2>
+          <h2 className="mb-3 text-xs uppercase tracking-wide text-(--color-muted)">Recently viewed</h2>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {history.map((h) => (
-              <Link key={h.productId._id} to={`/product/${h.productId._id}`} className="aspect-square rounded-md bg-(--color-line)">
+              <Link key={h.productId._id} to={`/product/${h.productId._id}`} className="aspect-square overflow-hidden rounded-sm bg-(--color-paper-sunken)">
                 {h.productId.images?.[0] && (
-                  <img src={h.productId.images[0]} className="h-full w-full rounded-md object-cover" />
+                  <img src={h.productId.images[0]} className="h-full w-full object-cover" />
                 )}
               </Link>
             ))}
