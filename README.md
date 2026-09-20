@@ -17,7 +17,8 @@ A full-stack e-commerce web application modeled on Myntra — built end-to-end w
 - **Checkout with real Stripe payments** — Stripe Payment Element, signature-verified & idempotent webhooks, DB transactions for consistency
 - **Order management** — filterable/sortable/paginated order history, PDF invoice generation, one-click reorder, cancellation & return flows
 - **Real-time notifications** — in-app (Socket.io) and background push (Web Push / VAPID) that work even with the tab closed, covering order updates, shipping, price drops, back-in-stock, and abandoned-cart reminders
-- **Theme system** — light/dark/system, syncs across devices, fully token-driven (no hardcoded colors)
+- **Theme system** — light/dark, synced across devices and fully token-driven (no hardcoded colors), with a playful running-garment animation on toggle
+- **Editorial fashion-forward UI** — full-viewport campaign hero, category worlds, masonry product catalog, and a dedicated site footer
 
 ## Tech Stack
 
@@ -66,3 +67,4 @@ npm run dev
 
 - Push notifications require VAPID keys — generate a pair with `npx web-push generate-vapid-keys` and set matching public keys on both frontend and backend.
 - No admin/staff role system exists yet — a couple of operational endpoints (order fulfillment progression, product price/stock updates) are reachable by any authenticated user rather than gated to staff; noted in code as a follow-up for a production version.
+Himanshu Chauhan
