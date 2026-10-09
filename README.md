@@ -67,4 +67,4 @@ npm run dev
 
 - Push notifications require VAPID keys — generate a pair with `npx web-push generate-vapid-keys` and set matching public keys on both frontend and backend.
 - No admin/staff role system exists yet — a couple of operational endpoints (order fulfillment progression, product price/stock updates) are reachable by any authenticated user rather than gated to staff; noted in code as a follow-up for a production version.
-Himanshu Chauhan
+## Himanshu Chauhan - himanshuchauhan08072004@gmail.com
